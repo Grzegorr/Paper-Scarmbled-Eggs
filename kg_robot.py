@@ -462,7 +462,7 @@ class kg_robot():
         """
         open gripper, times out after ~5*var seconds, if var>=5 calibrate open position instead
         """
-        if var>=5 and self.side=='right':
+        if var>=5 and self.side =='right':
             self.serial_send("B",0,wait)
         else:
             self.serial_send("O",var,wait)
