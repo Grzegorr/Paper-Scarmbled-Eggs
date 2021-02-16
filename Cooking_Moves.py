@@ -8,13 +8,24 @@ import sys
 import waypoints as wp
 import kg_robot as kgr
 
+
+
+#-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#
+#                                                            Choice of a pre-programed move - uncomment one
+#
+#-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
 #task = "Home Position"
 #task = "Cooking Home Position"
+#task = "Callibration"
 #task = "First Test"
 #task = "Test2"
-task = "Get L and J"
+#task = "Get L and J"
 #task = "Current Workspace"
-#task = "Stirring Presentation"
+task = "Stirring Presentation"
 #task = "Scrape Eggs"
 
 
@@ -37,9 +48,24 @@ def main():
         print("Task: " + task)
         move_to_cooking_home(robot)
 
+    if task == "Callibration":
+        print("Task: " + task)
+        move_to_home(robot)
+        robot.translatel_rel([0.65, 0.1, -0.15, 0, 0, 0])
+        robot.movel(wp.callibrate_left)
+        input("Move to next calibration point?")
+        robot.translatel_rel([0, 0, 0.3, 0, 0, 0])
+        move_to_home(robot)
+        robot.translatel_rel([-0.4, 0.1, -0.15, 0, 0, 0])
+        robot.movel(wp.callibrate_right)
+        input("Move to home?")
+        robot.translatel_rel([0, 0, 0.3, 0, 0, 0])
+        move_to_home(robot)
+
+
     if task == "Current Workspace":
         print("Task: " + task)
-        pan_left_to_right(robot)
+        move_to_mixing_home(robot)
 
 
     if task == "First Test":
@@ -63,22 +89,47 @@ def main():
 
     if task == "Stirring Presentation":
         print("Task: " + task)
-        move_to_cooking_home(robot)
-        stir_circle_relative(robot, 0.1, 0.12, 0.005, 0.45, 5)
-        move_to_cooking_home(robot)
-        stir_circle_relative(robot, 0.1, 0.12, 0.001, 0.05, 1)
+        move_to_mixing_home(robot)
+        for i in range(1000):
+            for angle in [0, 20, 40, 60, 80, 100, 120, 140, 160]:
+                fold_eggs(robot, 0.13, angle, 0.07)
+            for k in range(1):
+                zigzag_stir(robot,0.13,0.11)
+            for j in range(1):
+                move_to_mixing_home(robot)
+                stir_circle_relative(robot, 0.1, 0.13, 0.001, 0.30, 1.5)
+        #move_to_mixing_home(robot)
+        #stir_circle_relative(robot, 0.1, 0.08, 0.002, 0.05, 1)
+
+    if task == "Zigzag Presentation":
+        print("Task: " + task)
+        for i in range(1000):
+            move_to_mixing_home(robot)
+            stir_circle_relative(robot, 0.1, 0.13, 0.001, 0.30, 1.5)
+        #move_to_mixing_home(robot)
+        #stir_circle_relative(robot, 0.1, 0.08, 0.002, 0.05, 1)
 
     if task == "Scrape Eggs":
         print("Task: " + task)
-        move_to_cooking_home(robot)
+        move_to_home(robot)
         for angle in [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330]:
             fold_eggs(robot, 0.05, angle, 0.1)
-
-
     time.sleep(3)
+
+
+
+#-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#
+#                                                      Functions For Movement
+#
+#-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 def move_to_cooking_home(robot):
     robot.movel(wp.cooking_home_l)
+    print("Move: Home")
+
+def move_to_mixing_home(robot):
+    robot.movel(wp.mixing_home_l)
     print("Move: Home")
 
 def move_to_home(robot):
@@ -94,6 +145,74 @@ def tool_to_use(robot, tool):
         robot.movej_rel([0, 0, 0, 0, -3.14, 0])
 
 
+
+
+def pan_left_to_heat(robot):
+    move_to_cooking_home(robot)
+    #move behind the pan
+    robot.translatel_rel([0.4, 0.2, -0.1, 0, 0, 0])
+    #press pan against a wall
+    robot.translatel_rel([0, -0.2, 0, 0, 0, 0])
+    #Here the magnet should be turned on
+    #Pull backfrom the wall
+    robot.translatel_rel([0, 0.1, 0, 0, 0, 0])
+    #Drag to heat
+    robot.translatel_rel([-0.3, 0, 0, 0, 0, 0])
+    #Here the magnet should be switched of
+    #Go back
+    robot.translatel_rel([0, 0.1, 0, 0, 0, 0])
+    #Go home
+    move_to_cooking_home(robot)
+
+def pan_left_to_right(robot):
+    #start from home
+    move_to_cooking_home(robot)
+    #input("Go to next step?")
+    # move behind the pan
+    robot.translatel_rel([0.2, 0.22, -0.1, 0, 0, 0])
+    robot.translatel_rel([0, -0.09, -0.08, 0, 0, 0])
+    robot.translatel_rel([-0.35, 0, 0, 0, 0, 0])
+    robot.translatel_rel([0, 0, 0, 0, 0, 0.2])
+    move_to_cooking_home(robot)
+
+#side  =  "left" or "right"
+def zigzag_stir(robot, h, r):
+    #start from cooking home
+    robot.movel(wp.mixing_home_l)
+
+    robot.movel_tool([0.5*r, 0.5*r, 0, 0, 0, 0])
+    robot.movel_tool([0, 0, h, 0, 0, 0])
+
+    robot.movel_tool([-r, 0, 0, 0, 0, 0])
+    robot.movel_tool([r, -0.25 * r, 0, 0, 0, 0])
+    robot.movel_tool([-r, 0, 0, 0, 0, 0])
+    robot.movel_tool([r, -0.25 * r, 0, 0, 0, 0])
+    robot.movel_tool([-r, 0, 0, 0, 0, 0])
+    robot.movel_tool([r, -0.25 * r, 0, 0, 0, 0])
+    robot.movel_tool([-r, 0, 0, 0, 0, 0])
+    robot.movel_tool([r, -0.25 * r, 0, 0, 0, 0])
+
+    robot.movel_tool([0, r, 0, 0, 0, 0])
+    robot.movel_tool([-0.25 * r, -r, 0, 0, 0, 0])
+    robot.movel_tool([0, r, 0, 0, 0, 0])
+    robot.movel_tool([-0.25 * r, -r, 0, 0, 0, 0])
+    robot.movel_tool([0, r, 0, 0, 0, 0])
+    robot.movel_tool([-0.25 * r, -r, 0, 0, 0, 0])
+    robot.movel_tool([0, r, 0, 0, 0, 0])
+    robot.movel_tool([-0.25 * r, -r, 0, 0, 0, 0])
+
+    robot.movel_tool([0.5 * r, -0.5 * r, 0, 0, 0, 0]) #back to the middle
+    robot.movel_tool([0, 0, -h, 0, 0, 0])
+    robot.movel(wp.mixing_home_l)
+
+
+
+#-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#
+#                                                                   Old Functions
+#
+#-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 #stirring home must in the middle of the circle, spatula edge along x direction
 def stir_circle_relative(robot, radius, height, move_radius, move_vel, move_acc):
 
@@ -101,6 +220,9 @@ def stir_circle_relative(robot, radius, height, move_radius, move_vel, move_acc)
     joints = robot.getj()
     if joints[5] > 0:
         robot.movel_tool([0,0,0,0,0,-3.14])
+    joints = robot.getj()
+    if joints[5] > 0:
+        robot.movel_tool([0, 0, 0, 0, 0, -3.14])
     joints = robot.getj()
     if joints[5] > 0:
         robot.movel_tool([0, 0, 0, 0, 0, -3.14])
@@ -123,7 +245,7 @@ def stir_circle_relative(robot, radius, height, move_radius, move_vel, move_acc)
             robot.movel(new_pose)
 
             #Move toward inner part of circle
-            robot.movel_tool([0, 0, 0, 0, 0, 2 * 3.14 / 36])
+            #robot.movel_tool([0, 0, 0, 0, 0, 2 * 3.14 / 36])
 
             #tool down
             robot.translatel_rel([0, 0, -height, 0, 0, 0])
@@ -142,7 +264,7 @@ def stir_circle_relative(robot, radius, height, move_radius, move_vel, move_acc)
             #y_diff = y - previous_y
             #print("x_diff: " + str(x_diff))
             #print("y_diff: " + str(y_diff))
-            robot.movel_tool([0, 0.35*radius, 0, 0, 0, 2 * 3.14 / 18], vel = move_vel, acc = move_acc, radius = move_radius)
+            robot.movel_tool([0, 0.3*radius, 0, 0, 0, 2 * 3.14 / 18], vel = move_vel, acc = move_acc, radius = move_radius)
             #print(previous_angle - angle)
             #print()
 
@@ -171,60 +293,18 @@ def fold_eggs(robot,h, angle_deg, r):
     robot.movel_tool([0, 0, 0, 0, 0, angle_rad])
     robot.movel_tool([r, 0, 0, 0, 0, 0])
     robot.movel_tool([0, 0, h, 0, 0, 0])
-    robot.movel_tool([-1.5*r, 0, 0, 0, 0, 0])
+    robot.movel_tool([-2*r, 0, 0, 0, 0, 0])
     robot.movel_tool([0, 0, -h, 0, 0, 0])
-    robot.movel_tool([0.5 * r, 0, 0, 0, 0, 0])
+    robot.movel_tool([r, 0, 0, 0, 0, 0])
     robot.movel_tool([0, 0, 0, 0, 0, -angle_rad])
 
-def pan_left_to_heat(robot):
-    move_to_cooking_home(robot)
-    #move behind the pan
-    robot.translatel_rel([0.4, 0.2, -0.1, 0, 0, 0])
-    #press pan against a wall
-    robot.translatel_rel([0, -0.2, 0, 0, 0, 0])
-    #Here the magnet should be turned on
-    #Pull backfrom the wall
-    robot.translatel_rel([0, 0.1, 0, 0, 0, 0])
-    #Drag to heat
-    robot.translatel_rel([-0.3, 0, 0, 0, 0, 0])
-    #Here the magnet should be switched of
-    #Go back
-    robot.translatel_rel([0, 0.1, 0, 0, 0, 0])
-    #Go home
-    move_to_cooking_home(robot)
-
-def pan_left_to_right(robot):
-    #start from home
-    move_to_cooking_home(robot)
-    input("Go to next step?")
-    #Set tool to Gripper
-    tool_to_use(robot, "Gripper")
-    input("Go to next step?")
-    # move behind the pan
-    robot.translatel_rel([0.1, 0.2, -0.1, 0, 0, 0])
-    input("Go to next step?")
-    # press pan against a wall
-    robot.translatel_rel([0, -0.2, 0, 0, 0, 0])
-    input("Go to next step?")
-    # Here the magnet should be turned on
-    # Pull backfrom the wall
-    robot.translatel_rel([0, 0.1, 0, 0, 0, 0])
-    input("Go to next step?")
-    # Drag to right
-    robot.translatel_rel([-0.3, 0, 0, 0, 0, 0])
-    input("Go to next step?")
-    # Here the magnet should be switched of
-    # Go back
-    robot.translatel_rel([0, 0.1, 0, 0, 0, 0])
-    input("Go to next step?")
-    # Set tool to Spatula
-    tool_to_use(robot, "Spatula")
-    input("Go to next step?")
-    # Go home
-    move_to_cooking_home(robot)
 
 
-
+#-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#
+#                                                                   Main
+#
+#-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 if __name__ == '__main__': main()
 
