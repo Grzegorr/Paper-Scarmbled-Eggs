@@ -5,8 +5,10 @@ import numpy
 import socket
 import sys
 
+
 import waypoints as wp
 import kg_robot as kgr
+from SalenitySensor.SalenitySensor import SolenitySensor as salt_sensor
 
 
 
@@ -25,9 +27,11 @@ import kg_robot as kgr
 #task = "Test2"
 #task = "Get L and J"
 #task = "Current Workspace"
-task = "Stirring Presentation"
+#task = "Stirring Presentation"
 #task = "Scrape Eggs"
-
+#task = "Set Mixing Procedure"
+#task = "Single Salenity Test"
+task = "Add Salt"
 
 
 def main():
@@ -38,6 +42,27 @@ def main():
     #print("------------Set Payload = 0kg------------\r\n\r\n")
     #robot.set_tcp([0,0,0])
     #robot.set_payload(0)
+
+    SALT = salt_sensor(25)
+
+    if task == "Add Salt":
+        print("Task: " + task)
+        move_to_mixing_home(robot)
+        robot.movel_tool([0, 0, 0.133, 0, 0, 0])
+        robot.translatel_rel([0, 0.05, 0, 0, 0, 0], vel=0.1)
+        robot.translatel_rel([-0.43, 0, 0, 0, 0, 0], vel = 0.1)
+        ##Now the pan is under salt
+        robot.translatel_rel([0, 0.005, 0.15, 0, 0, 0], vel=0.1)
+        robot.movej_rel([0, 0, 0, 0, 1.57, 0])
+        robot.movej_rel([0.05, -0.17, 0, 0, 0, 0])
+        robot.movej_rel([0, 0, -0.04, 0, 0, 0])
+        time.sleep(5)
+
+        robot.movej_rel([0, 0, 0.04, 0, 0, 0])
+        robot.movej_rel([-0.05, 0.17, 0, 0, 0, 0])
+        robot.movej_rel([0, 0, 0, 0, -1.57, 0])
+        robot.translatel_rel([0, -0.005, -0.15, 0, 0, 0], vel=0.1)
+        robot.translatel_rel([0.48, 0, 0, 0, 0, 0], vel=0.1)
 
 
     if task == "Home Position":
@@ -65,6 +90,8 @@ def main():
 
     if task == "Current Workspace":
         print("Task: " + task)
+        move_to_mixing_home(robot)
+        stir_circle_relative(robot, 0.1, 0.13, 0.001, 0.30, 1.5)
         move_to_mixing_home(robot)
 
 
@@ -115,6 +142,85 @@ def main():
         for angle in [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330]:
             fold_eggs(robot, 0.05, angle, 0.1)
     time.sleep(3)
+
+    if task == "Set Mixing Procedure":
+        print("Task: " + task)
+        sequence_no = 4
+        zigzag_no = 3
+        stir_no = 1
+
+        move_to_mixing_home(robot)
+        for i in range(sequence_no):
+            for angle in [0, 20, 40, 60, 80, 100, 120, 140, 160]:
+                fold_eggs(robot, 0.13, angle, 0.065)
+            for k in range(zigzag_no):
+                zigzag_stir(robot,0.13,0.11)
+            for j in range(stir_no):
+                move_to_mixing_home(robot)
+                stir_circle_relative(robot, 0.1, 0.13, 0.001, 0.30, 1.5)
+
+    if task == "Single Salenity Test":
+        print("Task: " + task)
+        #h1 - down to work
+        #h2 - down to pan
+        #h3 - down to test eggs
+        #h4 - dip into water
+        h1 = 0.32
+        h2 = 0.08
+        h3 = 0.038
+        h4 = 0.062
+
+        offsets = [
+            [-0.05, -0.05], [-0.05, -0.03], [-0.05, 0], [-0.05, 0.03], [-0.05, 0.05],
+            [-0.03, -0.05], [-0.03, -0.03], [-0.03, 0], [-0.03, 0.03], [-0.03, 0.05],
+            [0, -0.05],[0, -0.03],[0, 0],[0, 0.03],[0, 0.05],
+            [0.03, -0.05], [0.03, -0.03], [0.03, 0], [0.03, 0.03], [0.03, 0.05],
+            [0.05, -0.05], [0.05, -0.03], [0.05, 0], [0.05, 0.03], [0.05, 0.05]
+        ]
+
+
+        move_to_mixing_home(robot)
+        robot.movej_rel([0, 0, 0, 0, 3.14, 0])
+        #go down to work area
+        robot.movel_tool([0, 0, -h1, 0, 0, 0])
+
+        for offset in offsets:
+            #test sequence start
+            robot.movel_tool([0, 0, -h2, 0, 0, 0])
+            robot.movel_tool([offset[0], offset[1], 0, 0, 0, 0])
+            robot.movel_tool([0, 0, -h3, 0, 0, 0])
+            time.sleep(3)
+            SALT.getNextReading()
+            robot.movel_tool([0, 0, h3, 0, 0, 0])
+            robot.movel_tool([-offset[0], -offset[1], 0, 0, 0, 0])
+            robot.movel_tool([0, 0, h2, 0, 0, 0])
+            robot.translatel_rel([0.37, 0, 0, 0, 0, 0])
+            robot.movel_tool([0, 0, -h4, 0, 0, 0])
+            time.sleep(1.5)
+            robot.movel_tool([0, 0, h4, 0, 0, 0])
+            robot.movel_tool([0, 0, -h4, 0, 0, 0])
+            time.sleep(1.5)
+            robot.movel_tool([0, 0, h4, 0, 0, 0])
+            robot.movel_tool([0, 0, -h4, 0, 0, 0])
+            time.sleep(1.5)
+            robot.movel_tool([0, 0, h4, 0, 0, 0])
+            robot.movej_rel([0, 0, 0, 0, 1, 0])
+            robot.movej_rel([0, 0, 0, 0, -1, 0])
+            robot.translatel_rel([-0.37, 0, 0, 0, 0, 0])
+
+
+        robot.movel_tool([0, 0, h2, 0, 0, 0])
+        robot.movel_tool([0, 0, h1, 0, 0, 0])
+        robot.movej_rel([0, 0, 0, 0, -3.14, 0])
+        data = SALT.returnData()
+        print(data)
+
+
+
+time.sleep(3)
+
+
+
 
 
 
@@ -201,7 +307,7 @@ def zigzag_stir(robot, h, r):
     robot.movel_tool([0, r, 0, 0, 0, 0])
     robot.movel_tool([-0.25 * r, -r, 0, 0, 0, 0])
 
-    robot.movel_tool([0.5 * r, -0.5 * r, 0, 0, 0, 0]) #back to the middle
+    robot.movel_tool([-0.5 * r, 0.5 * r, 0, 0, 0, 0]) #back to the middle
     robot.movel_tool([0, 0, -h, 0, 0, 0])
     robot.movel(wp.mixing_home_l)
 
@@ -217,15 +323,14 @@ def zigzag_stir(robot, h, r):
 def stir_circle_relative(robot, radius, height, move_radius, move_vel, move_acc):
 
     #Take care of the robot wrist angle
-    joints = robot.getj()
-    if joints[5] > 0:
-        robot.movel_tool([0,0,0,0,0,-3.14])
-    joints = robot.getj()
-    if joints[5] > 0:
-        robot.movel_tool([0, 0, 0, 0, 0, -3.14])
-    joints = robot.getj()
-    if joints[5] > 0:
-        robot.movel_tool([0, 0, 0, 0, 0, -3.14])
+    for k  in range(4):
+        joints = robot.getj()
+        if joints[5] > 0:
+            robot.movel_tool([0,0,0,0,0,-3.14])
+        if joints[5] < -3.14:
+            robot.movel_tool([0,0,0,0,0,0.5*3.14])
+
+
 
     # get current positionfor a center of a circle
     stirring_home = robot.getl()

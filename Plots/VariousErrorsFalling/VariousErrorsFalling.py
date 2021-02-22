@@ -14,6 +14,8 @@ plt.plot(iteration, mixing_error, label = "normalized mixing error")
 plt.ylabel("Error")
 plt.xlabel("Iteration")
 plt.legend(loc='upper right')
-plt.show()
+#plt.show()
 plt.savefig("VariousErrorsFalling.png")
 plt.clf()
+
+
