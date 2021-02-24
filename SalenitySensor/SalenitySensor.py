@@ -23,7 +23,7 @@ class SolenitySensor:
             bit = self.ser.read(1)
             #print(bit)
             if bit == b'\n':
-                print("Synchronized")
+                #print("Synchronized")
                 break
 
         line = self.ser.read(18)
@@ -31,7 +31,7 @@ class SolenitySensor:
         for i in line:
             j = chr(int(i))
             string = string + j
-        print(string)
+        #print(string)
         splits = string.split()
         splits = splits[1].split(':')
         splits = splits[1].split('/')
@@ -43,10 +43,10 @@ class SolenitySensor:
 
     def getNextReading(self):
         next_index = (self.current_measurements == np.inf).argmax(axis=0)
-        print("Next Index: " + str(next_index))
+        #print("Next Index: " + str(next_index))
         dataLine = self.readDataLine()
         self.current_measurements[next_index] = dataLine
-        print(self.current_measurements)
+        #print(self.current_measurements)
 
     def resetData(self):
         self.current_measurements = np.full(self.no_readings, np.inf)
