@@ -22,7 +22,7 @@ salt0 = [6.5, 7.07, 6.48, 3.32, 6.13, 5.98, 6.11, 5.66, 5.51, 5.57, 6.93, 5.79]
 variance0 = statistics.variance(salt0)
 mean0 = statistics.mean(salt0)
 
-salt1 = [7, 8.42, 9.32, 9.67, 6.57, 5.48, 9.14, 8.85, 7.26, ]
+salt1 = [7, 8.42, 9.32, 9.67, 6.57, 5.48, 9.14, 8.85, 7.26]
 variance1 = statistics.variance(salt1)
 mean1 = statistics.mean(salt1)
 

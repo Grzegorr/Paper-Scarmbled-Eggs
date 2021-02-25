@@ -16,7 +16,7 @@ class SolenitySensor:
 
         self.ser.flushOutput()
         self.ser.flushInput()
-        time.sleep(1)
+        time.sleep(0.5)
 
         #Synchronize
         while True:
