@@ -8,7 +8,7 @@ class SolenitySensor:
 
     def __init__(self, no_read):
         self.no_readings = no_read
-        self.ser = serial.Serial(port='COM5', baudrate=9600, bytesize=serial.EIGHTBITS, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, timeout=10)
+        self.ser = serial.Serial(port='COM5', baudrate=19200, bytesize=serial.EIGHTBITS, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, timeout=10)
         print("I am connected.")
         self.current_measurements = np.full(self.no_readings, np.inf)
 
@@ -31,9 +31,34 @@ class SolenitySensor:
         for i in line:
             j = chr(int(i))
             string = string + j
-        #print(string)
+        print(string)
         splits = string.split()
         splits = splits[1].split(':')
+        for i in range(10):
+            if len(splits) != 2:
+                print("XXXXXXXXXXXXXXXXXXx")
+                print("Splits lenght problem")
+                print("XXXXXXXXXXXXXXXXXXx")
+                self.ser.flushOutput()
+                self.ser.flushInput()
+                time.sleep(0.5)
+
+                # Synchronize
+                while True:
+                    bit = self.ser.read(1)
+                    # print(bit)
+                    if bit == b'\n':
+                        # print("Synchronized")
+                        break
+
+                line = self.ser.read(18)
+                string = ""
+                for i in line:
+                    j = chr(int(i))
+                    string = string + j
+                print(string)
+                splits = string.split()
+                splits = splits[1].split(':')
         splits = splits[1].split('/')
         number_str = splits[0][0:-2]
         #print(number_str)

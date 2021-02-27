@@ -23,3 +23,26 @@ plt.ylabel("Mean")
 plt.savefig("MeanVsMixes.png")
 plt.show()
 plt.clf()
+
+
+#New loop
+
+variance = [1.85, 3.4, 2.35, 2.28, 2.22, 0.58, 1.66, 0.54, 0.81, 0.34, 0.78, 0.6, 0.39, 0.46, 0.75, 0.19, 0.21, 0.37, 0.19, 0.2, 0.25, 0.22, 0.17, 0.28, 0.23, 0.13, 0.14, 0.15, 0.15, 0.16 ]
+means = [6.1, 5.59, 4.83, 4.76, 4.99, 4.84, 4.55, 4.06, 4.1, 4.59, 4.7, 4.8, 4.38, 4.71, 4.65, 5.24, 5.19, 4.84, 5.16, 5.13, 5.2, 5.17, 5.17, 5.19, 4.58, 4.82, 4.94, 5.01, 5.17, 5.2 ]
+mixes = range(len(means))
+
+plt.title("Variance vs Mixes")
+plt.plot(mixes, variance, marker = ".")
+plt.xlabel("Mixes")
+plt.ylabel("Variance")
+plt.savefig("NewVarVsMixes.png")
+plt.show()
+plt.clf()
+
+plt.title("Mean vs Mixes")
+plt.plot(mixes, means, marker = ".")
+plt.xlabel("Mixes")
+plt.ylabel("Mean")
+plt.savefig("NewMeanVsMixes.png")
+plt.show()
+plt.clf()

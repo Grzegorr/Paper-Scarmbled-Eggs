@@ -5,6 +5,8 @@ from math import pi
 import numpy
 import socket
 import sys
+import statistics
+from datetime import datetime
 
 
 import waypoints as wp
@@ -20,6 +22,8 @@ from SalenitySensor.SalenitySensor import SolenitySensor as salt_sensor
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+task = "Final Demo"
+#task = "Average Salinity Detection"
 #task = "Salt loop experiment"
 #task = "Cooking concept proof"
 #task = "Home Position"
@@ -28,12 +32,12 @@ from SalenitySensor.SalenitySensor import SolenitySensor as salt_sensor
 #task = "First Test"
 #task = "Test2"
 #task = "Get L and J"
-task = "Current Workspace"
-task = "Current Workspace2"
+#task = "Current Workspace"
+#task = "Current Workspace2"
 #task = "Stirring Presentation"
 #task = "Scrape Eggs"
 #task = "Set Mixing Procedure"
-#task = "Single Salenity Test"
+#task = "Single Salinity Test"
 #task = "Add Salt"
 
 
@@ -44,6 +48,40 @@ def main():
     print("----------------Hi Burt!-----------------\r\n\r\n")
 
     SALT = salt_sensor(70)
+
+    if task == "Final Demo":
+        print("Task: " + task)
+
+        #Heat used = 6
+        mixing_sequence_time = 39.0
+        #parameters:
+        total_cooking_time = 2000.0
+        time_salt = 1.0
+        time_stop = 21
+
+
+        #start at lower left hob
+        move_to_scrambling_home(robot)#yes, the names are switched
+        move_hot_to_cold(robot)# yes its another way around
+        add_salt(robot, time_salt)
+
+        #now cook
+        no_loop = math.ceil(total_cooking_time/(time_stop + mixing_sequence_time))
+        for n in range(no_loop):
+            now = datetime.now().time()  # time object
+            print("now =", now)
+            standard_mix_procedure(robot, 1)
+            time.sleep(time_stop)
+
+        move_cold_to_hot(robot)# yes, its opposite then name
+
+
+
+    if task == "Average Salinity Detection":
+        print("Task: " + task)
+        for d in range(12):
+            salt_testing_loop(robot, SALT)
+
 
     if task == "Salt loop experiment":
         print("Task: " + task)
@@ -66,23 +104,9 @@ def main():
         #move to cold hob to cool down
         move_hot_to_cold(robot)
 
-
-
     if task == "Add Salt":
         print("Task: " + task)
         add_salt(robot, 2.5)
-
-    if task == "Home Position":
-        print("Task: " + task)
-        move_to_home(robot)
-
-    if task == "Cooking Home Position":
-        print("Task: " + task)
-        move_to_cooking_home(robot)
-
-    if task == "Callibration":
-        print("Task: " + task)
-        callibration_pan_gripper(robot)
 
     if task == "Current Workspace":
         print("Task: " + task)
@@ -99,7 +123,7 @@ def main():
 
     if task == "Current Workspace2":
         print("Task: " + task)
-        data = mass_salinity_tast(robot,SALT)
+        data = mass_salinity_test(robot,SALT)
         print(data)
 
     if task == "First Test":
@@ -150,9 +174,15 @@ def main():
         sequence_no = 1
         standard_mix_procedure(robot, sequence_no)
 
-    if task == "Single Salenity Test":
+    if task == "Single Salinity Test":
         print("Task: " + task)
-        salinity_test(robot,SALT)
+        data = mass_salinity_test(robot,SALT)
+        data = numpy.array(data)
+        print()
+        print("Salinity Test")
+        print("Data: " + str(list(data)))
+        print("Mean: " + str(statistics.mean(data)))
+        print("Variance: " + str(statistics.variance(data)))
 
 time.sleep(3)
 
@@ -174,6 +204,10 @@ def move_to_cooking_home(robot):
 def move_to_mixing_home(robot):
     robot.movel(wp.mixing_home_l)
     print("Move: Mixing Home")
+
+def move_to_mixing_sensor_down_home(robot):
+    robot.movel(wp.mixing_sensor_down_home_l)
+    print("Move: Sensor Down")
 
 def move_to_home(robot):
     robot.movel(wp.robot_home_l)
@@ -245,10 +279,28 @@ def salt_loop(robot, SALT, desired_salt):
     print("mill_time: " + str(mill_time))
     print()
 
+def salt_testing_loop(robot, SALT):
+    data = mass_salinity_test(robot, SALT)
+    # compute stats
+    variance = statistics.variance(data)
+    mean = statistics.mean(data)
+
+    # printout
+    print()
+    print("****Average Salt Printout****")
+    print("data: " + str(data))
+    print("mean: " + str(mean))
+    print("variance: " + str(variance))
+    print()
+
+    add_salt(robot, 0.5)
+
+    standard_mix_procedure(robot, 10)
+
 def mixing_loop(robot, SALT, target_variance):
     variance = 99999
     # sample salt
-    data = salinity_test(robot, SALT)
+    data = mass_salinity_test(robot, SALT)
     # compute stats
     variance = statistics.variance(data)
     mean = statistics.mean(data)
@@ -266,7 +318,7 @@ def mixing_loop(robot, SALT, target_variance):
         # Mix
         standard_mix_procedure(robot, 1)
         # sample salt
-        data = salinity_test(robot, SALT)
+        data = mass_salinity_test(robot, SALT)
         # compute stats
         variance = statistics.variance(data)
         mean = statistics.mean(data)
@@ -383,20 +435,20 @@ def zigzag_stir_scramble(robot, h, r):
 
 def add_salt(robot, time_salt_mill):
     move_to_mixing_home(robot)
-    robot.movel_tool([0, 0, 0.133, 0, 0, 0])
+    robot.movel_tool([0, 0, 0.13, 0, 0, 0])
     robot.translatel_rel([0, 0.05, 0, 0, 0, 0], vel=0.1)
     robot.translatel_rel([-0.43, 0, 0, 0, 0, 0], vel=0.1)
     ##Now the pan is under salt
-    robot.translatel_rel([0, 0.005, 0.15, 0, 0, 0], vel=0.1)
+    robot.translatel_rel([0, 0.005, 0.147, 0, 0, 0], vel=0.1)
     robot.movej_rel([0, 0, 0, 0, 1.57, 0])
-    robot.movej_rel([0.05, -0.15, 0, 0, 0, 0])
-    robot.movej_rel([0, 0, -0.06, 0, 0, 0])
+    robot.movej_rel([0.05, -0.16, 0, 0, 0, 0])
+    robot.movej_rel([0, 0, -0.036, 0, 0, 0])
     time.sleep(time_salt_mill)
 
-    robot.movej_rel([0, 0, 0.04, 0, 0, 0])
-    robot.movej_rel([-0.05, 0.15, 0, 0, 0, 0])
+    robot.movej_rel([0, 0, 0.036, 0, 0, 0])
+    robot.movej_rel([-0.05, 0.16, 0, 0, 0, 0])
     robot.movej_rel([0, 0, 0, 0, -1.57, 0])
-    robot.translatel_rel([0, -0.005, -0.15, 0, 0, 0], vel=0.1)
+    robot.translatel_rel([0, -0.005, -0.14, 0, 0, 0], vel=0.1)
     robot.translatel_rel([0.53, 0, 0, 0, 0, 0], vel=0.1)
     robot.translatel_rel([0, -0.1, 0, 0, 0, 0], vel=0.1)
     move_to_mixing_home(robot)
@@ -496,7 +548,7 @@ def salinity_test(robot, SALT):
     move_to_mixing_home(robot)
     return data
 
-def mass_salinity_tast(robot, SALT):
+def mass_salinity_test(robot, SALT):
     move_to_mixing_home(robot)
     SALT.resetData()
     # h1 - down to work
@@ -506,7 +558,7 @@ def mass_salinity_tast(robot, SALT):
     # h5 - up to brush
     h1 = 0.32
     h2 = 0.0995
-    h3 = 0.016
+    h3 = 0.02
     h4 = 0.062
     h5 = 0.22
 
@@ -518,13 +570,14 @@ def mass_salinity_tast(robot, SALT):
     move_to_mixing_home(robot)
     robot.movej_rel([0, 0, 0, 0, 3.14, 0])
     # go down to work area
-    robot.movel_tool([0, 0, -h1, 0, 0, 0])
+    #input("Syopped")
+    robot.movel_tool([0, 0, -h1, 0, 0, 0], acc = 0.2)
 
     for offset in offsets:
         # test sequence start
-        robot.movel_tool([0, 0, -h2, 0, 0, 0])
-        robot.movel_tool([offset[0], offset[1], 0, 0, 0, 0])
-        robot.movel_tool([0, 0, -h3, 0, 0, 0])
+        robot.movel_tool([0, 0, -h2, 0, 0, 0], acc = 0.2)
+        robot.movel_tool([offset[0], offset[1], 0, 0, 0, 0], acc = 0.2)
+        robot.movel_tool([0, 0, -h3, 0, 0, 0], acc = 0.2)
         #########
         time.sleep(1)
         for i in range(10):
@@ -534,18 +587,19 @@ def mass_salinity_tast(robot, SALT):
             robot.translatel_rel([0, 0, -0.01, 0, 0, 0])
 
         #########
-        robot.movel_tool([0, 0, h3, 0, 0, 0])
-        robot.movel_tool([0, -2 * 5.0 / 7.0 * abs(offset[1]), 0, 0, 0, 0])
-        robot.movel_tool([-offset[0], -offset[1], 0, 0, 0, 0])
-        robot.movel_tool([0, 0, h2, 0, 0, 0])
+        robot.movel_tool([0, 0, h3, 0, 0, 0], acc = 0.2)
+        robot.movel_tool([0, -2 * 5.0 / 7.0 * abs(offset[1]), 0, 0, 0, 0], acc = 0.2)
+        robot.movel_tool([-offset[0], -offset[1], 0, 0, 0, 0], acc = 0.2)
+        robot.movel_tool([0, 0, h2, 0, 0, 0], acc = 0.2)
         # brush
-        robot.movel_tool([0, 0, h5, 0, 0, 0])
+        robot.movel_tool([0, 0, h5, 0, 0, 0], acc = 0.2)
         robot.translatel_rel([0.05, -0.22, 0, 0, 0, 0])
         robot.translatel_rel([-0.05, 0.22, 0, 0, 0, 0])
-        robot.movel_tool([0, 0, -h5, 0, 0, 0])
+        move_to_mixing_sensor_down_home(robot)
+        robot.movel_tool([0, 0, -h1, 0, 0, 0])
 
-    robot.movel_tool([0, 0, h2, 0, 0, 0])
-    robot.movel_tool([0, 0, h1, 0, 0, 0])
+    robot.movel_tool([0, 0, h2, 0, 0, 0], acc = 0.2)
+    robot.movel_tool([0, 0, h1, 0, 0, 0], acc = 0.2)
     robot.movej_rel([0, 0, 0, 0, -3.14, 0])
     data = SALT.returnData()
     # print(data)
