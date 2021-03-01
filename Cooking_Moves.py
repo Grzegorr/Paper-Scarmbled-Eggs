@@ -38,7 +38,7 @@ task = "Final Demo"
 #task = "Scrape Eggs"
 #task = "Set Mixing Procedure"
 #task = "Single Salinity Test"
-#task = "Add Salt"
+task = "Add Salt"
 
 
 def main():
@@ -55,9 +55,10 @@ def main():
         #Heat used = 6
         mixing_sequence_time = 39.0
         #parameters:
-        total_cooking_time = 2000.0
+        total_cooking_time = 1100
         time_salt = 1.0
-        time_stop = 21
+        #time_stop = 21
+        time_stop = 0
 
 
         #start at lower left hob
@@ -66,6 +67,7 @@ def main():
         add_salt(robot, time_salt)
 
         #now cook
+        cut_yolks(robot)
         no_loop = math.ceil(total_cooking_time/(time_stop + mixing_sequence_time))
         for n in range(no_loop):
             now = datetime.now().time()  # time object
@@ -106,7 +108,9 @@ def main():
 
     if task == "Add Salt":
         print("Task: " + task)
-        add_salt(robot, 2.5)
+        add_salt(robot, 0.5)
+        add_salt(robot, 0.5)
+        add_salt(robot, 0.5)
 
     if task == "Current Workspace":
         print("Task: " + task)
@@ -448,8 +452,10 @@ def add_salt(robot, time_salt_mill):
     robot.movej_rel([0, 0, 0.036, 0, 0, 0])
     robot.movej_rel([-0.05, 0.16, 0, 0, 0, 0])
     robot.movej_rel([0, 0, 0, 0, -1.57, 0])
-    robot.translatel_rel([0, -0.005, -0.14, 0, 0, 0], vel=0.1)
-    robot.translatel_rel([0.53, 0, 0, 0, 0, 0], vel=0.1)
+    robot.translatel_rel([0, -0.005, -0.1, 0, 0, 0], vel=0.1)
+    robot.translatel_rel([0.05, 0, 0, 0, 0, 0], vel=0.1)
+    robot.translatel_rel([0, 0, -0.04, 0, 0, 0], vel=0.1)
+    robot.translatel_rel([0.45, 0, 0, 0, 0, 0], vel=0.1)
     robot.translatel_rel([0, -0.1, 0, 0, 0, 0], vel=0.1)
     move_to_mixing_home(robot)
 
@@ -462,11 +468,15 @@ def standard_mix_procedure(robot, no_times):
 #        for angle in [0, 20, 40, 60, 80, 100, 120, 140, 160]:
 #            fold_eggs(robot, 0.133, angle, 0.08)
         for k in range(zigzag_no):
-            zigzag_stir_mix(robot, 0.133, 0.11)
+            zigzag_stir_mix(robot, 0.133, 0.12)
         for j in range(stir_no):
             move_to_mixing_home(robot)
-            stir_circle_relative(robot, 0.1, 0.133, 0.001, 0.30, 1.5)
+            stir_circle_relative(robot, 0.105, 0.135, 0.001, 0.30, 1.5)
             move_to_mixing_home(robot)
+
+def cut_yolks(robot):
+    for angle in [0,10, 20, 30, 40, 50,  60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180]:
+        fold_eggs(robot, 0.13, angle, 0.085)
 
 def standard_scrambling_procedure(robot, no_times):
     zigzag_no = 3
