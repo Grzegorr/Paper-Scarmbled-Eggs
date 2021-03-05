@@ -22,7 +22,7 @@ from SalenitySensor.SalenitySensor import SolenitySensor as salt_sensor
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-task = "Final Demo"
+#task = "Final Demo"
 #task = "Average Salinity Detection"
 #task = "Salt loop experiment"
 #task = "Cooking concept proof"
@@ -51,33 +51,14 @@ def main():
 
     if task == "Final Demo":
         print("Task: " + task)
-
-        #Heat used = 6
-        mixing_sequence_time = 39.0
-        #parameters:
-        total_cooking_time = 1100
-        time_salt = 1.0
-        #time_stop = 21
-        time_stop = 0
-
-
-        #start at lower left hob
-        move_to_scrambling_home(robot)#yes, the names are switched
-        move_hot_to_cold(robot)# yes its another way around
-        add_salt(robot, time_salt)
-
-        #now cook
-        cut_yolks(robot)
-        no_loop = math.ceil(total_cooking_time/(time_stop + mixing_sequence_time))
-        for n in range(no_loop):
-            now = datetime.now().time()  # time object
-            print("now =", now)
-            standard_mix_procedure(robot, 1)
-            time.sleep(time_stop)
-
-        move_cold_to_hot(robot)# yes, its opposite then name
-
-
+        desired_mean = 10
+        desired_variance = 0.8
+        #standard initaial conditions
+        #initial_time_mill = 0
+        #initial_time_stop = 120
+        initial_time_mill = 0
+        initial_time_stop = 0
+        cooking_loop(robot, SALT, desired_mean, desired_variance, initial_time_stop, initial_time_mill, "True", "True")
 
     if task == "Average Salinity Detection":
         print("Task: " + task)
@@ -108,9 +89,9 @@ def main():
 
     if task == "Add Salt":
         print("Task: " + task)
+        add_salt(robot, 0)
         add_salt(robot, 0.5)
-        add_salt(robot, 0.5)
-        add_salt(robot, 0.5)
+        add_salt(robot, 1)
 
     if task == "Current Workspace":
         print("Task: " + task)
@@ -190,11 +171,6 @@ def main():
 
 time.sleep(3)
 
-
-
-
-
-
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #                                                      Functions For Movement
@@ -233,6 +209,67 @@ def move_hot_to_cold(robot):
     robot.movel_tool([0, 0, 0.13, 0, 0, 0])
     robot.translatel_rel([0, -0.33, 0, 0, 0, 0], vel=0.1)
     move_to_mixing_home(robot)
+
+def cooking_loop(robot, SALT, desired_mean, desired_variance, initial_time_stop, initial_time_mill, if_cook, if_test):
+    # Heat used = 6
+    mixing_sequence_time = 39.0
+    # parameters:
+    total_cooking_time = 1100
+    time_salt = initial_time_mill
+    # time_stop = 21
+    time_stop = initial_time_stop
+    no_loop = math.ceil(total_cooking_time / (time_stop + mixing_sequence_time))
+
+    if if_cook == "True":
+        # start at lower left hob
+        move_to_scrambling_home(robot)  # yes, the names are switched
+        #time.sleep(20)
+        cut_yolks(robot)
+        move_hot_to_cold(robot)  # yes its another way around
+        add_salt(robot, time_salt)
+
+        # now cook
+        for n in range(no_loop):
+            now = datetime.now().time()  # time object
+            print("now =", now)
+            standard_mix_procedure(robot, 1)
+            time.sleep(time_stop)
+
+        move_cold_to_hot(robot)  # yes, its opposite then name
+
+    if if_test == "True":
+        input("Ready for testing part? Switch off thee hob, cool down the eggs and place eggs on 'hot' hob.")
+
+        #Salt Measurements with robotic arm
+        data = mass_salinity_test(robot, SALT)  # data is a list of measurements stored as floats
+        salt_mean = statistics.mean(data)       # mean - number of salt indication
+        salt_variance = statistics.variance(data)       # variance - measure of mixing
+
+        #next parameters computation - salt
+        mean_sal_error = desired_mean - salt_mean       # error for p controller for salt
+        P_salt_mill = 0.35 * 0.8  # 0.35 is actual rate of adding salinity per second, 0.8 to avoid overshoot, should then not overshoot by safty margin of 0.2
+        next_time_mill = initial_time_mill + P_salt_mill * mean_sal_error  # P controller adjusting time of pressing the mill
+
+        # next parameters computation - mixing
+        # The robot cooks for a given time by erforming mixing sequence(40 sec duration) and then stopping for a stop_time
+        variance_sal_error = desired_variance/salt_variance     # an error by not linear - its how many time the variance is bigger than average
+        extra_mix = 6.7 * math.log(variance_sal_error)      # 6.7 is time contsnt from mixes vs variance on raw eggs exponent matching (1/0.149)
+        init_mixes_no = no_loop     # bad code reassignment, no of mixing sequences robot did during cooking
+        next_time_stop = ((init_mixes_no + extra_mix)*(40 + initial_time_stop)/(init_mixes_no)) - 40.0  # now its translating new number of mixes into stop time before mixing
+
+        print("Demanded values: Mean - " + str(desired_mean) + " Variance - " + str(desired_variance))
+
+        print("Initial mill time: " + str(initial_time_mill))
+        print("Initial stop time: " + str(initial_time_stop))
+
+        print("Measured mean: " + str(salt_mean))
+        print("Measured variance: " + str(salt_variance))
+
+        print("Next mill time: " + str(next_time_mill))
+        print("Next stop time: " + str(next_time_stop))
+
+        return next_time_mill, next_time_stop
+
 
 def salt_loop(robot, SALT, desired_salt):
     allowed_iteratons = 3
@@ -445,12 +482,12 @@ def add_salt(robot, time_salt_mill):
     ##Now the pan is under salt
     robot.translatel_rel([0, 0.005, 0.147, 0, 0, 0], vel=0.1)
     robot.movej_rel([0, 0, 0, 0, 1.57, 0])
-    robot.movej_rel([0.05, -0.16, 0, 0, 0, 0])
-    robot.movej_rel([0, 0, -0.036, 0, 0, 0])
+    robot.movej_rel([0.05, -0.147, 0, 0, 0, 0])
+    robot.movej_rel([0, 0, -0.02, 0, 0, 0])
     time.sleep(time_salt_mill)
 
-    robot.movej_rel([0, 0, 0.036, 0, 0, 0])
-    robot.movej_rel([-0.05, 0.16, 0, 0, 0, 0])
+    robot.movej_rel([0, 0, 0.02, 0, 0, 0])
+    robot.movej_rel([-0.05, 0.147, 0, 0, 0, 0])
     robot.movej_rel([0, 0, 0, 0, -1.57, 0])
     robot.translatel_rel([0, -0.005, -0.1, 0, 0, 0], vel=0.1)
     robot.translatel_rel([0.05, 0, 0, 0, 0, 0], vel=0.1)
@@ -476,7 +513,7 @@ def standard_mix_procedure(robot, no_times):
 
 def cut_yolks(robot):
     for angle in [0,10, 20, 30, 40, 50,  60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180]:
-        fold_eggs(robot, 0.13, angle, 0.085)
+        fold_eggs(robot, 0.133, angle, 0.085)
 
 def standard_scrambling_procedure(robot, no_times):
     zigzag_no = 3
@@ -567,14 +604,14 @@ def mass_salinity_test(robot, SALT):
     # h4 - dip into water
     # h5 - up to brush
     h1 = 0.32
-    h2 = 0.0995
-    h3 = 0.02
+    h2 = 0.0945
+    h3 = 0.025
     h4 = 0.062
     h5 = 0.22
 
     offsets = [
         #[0.05, 0.05]
-        [-0.074, -0.03], [-0.057, -0.057], [-0.03, -0.074], [0, -0.08], [0.03, -0.074], [0.057, -0.057], [0.074, -0.03]
+        [-0.06, -0.05], [-0.04, -0.05], [-0.02, -0.05], [0, -0.05], [0.02, -0.05], [0.04, -0.05], [0.06, -0.05]
     ]
 
     move_to_mixing_home(robot)
@@ -593,12 +630,12 @@ def mass_salinity_test(robot, SALT):
         for i in range(10):
             SALT.getNextReading()
             robot.translatel_rel([0, 0, 0.01, 0, 0, 0])
-            robot.movel_tool([0, abs(offset[1])/7, 0, 0, 0, 0])
+            robot.movel_tool([0, abs(offset[1])/9.0, 0, 0, 0, 0])
             robot.translatel_rel([0, 0, -0.01, 0, 0, 0])
 
         #########
         robot.movel_tool([0, 0, h3, 0, 0, 0], acc = 0.2)
-        robot.movel_tool([0, -2 * 5.0 / 7.0 * abs(offset[1]), 0, 0, 0, 0], acc = 0.2)
+        robot.movel_tool([0, -2 * 5.0 / 9.0 * abs(offset[1]), 0, 0, 0, 0], acc = 0.2)
         robot.movel_tool([-offset[0], -offset[1], 0, 0, 0, 0], acc = 0.2)
         robot.movel_tool([0, 0, h2, 0, 0, 0], acc = 0.2)
         # brush
