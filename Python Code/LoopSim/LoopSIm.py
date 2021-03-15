@@ -56,7 +56,7 @@ def the_whole_loop(desired_mean, desired_variance):
 
 
 #the_whole_loop(10, 1.5)
-controller_iteration(8.3, 2.8, 7.87, 0.3, 0, 120)
+controller_iteration(6.26, 1.57, 10.2, 0.7, 0, 120)
 
 
 

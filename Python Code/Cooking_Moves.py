@@ -22,7 +22,7 @@ from SalenitySensor.SalenitySensor import SolenitySensor as salt_sensor
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-#task = "Final Demo"
+task = "Final Demo"
 #task = "Average Salinity Detection"
 #task = "Salt loop experiment"
 #task = "Cooking concept proof"
@@ -38,7 +38,7 @@ from SalenitySensor.SalenitySensor import SolenitySensor as salt_sensor
 #task = "Scrape Eggs"
 #task = "Set Mixing Procedure"
 #task = "Single Salinity Test"
-task = "Add Salt"
+#task = "Add Salt"
 
 
 def main():
@@ -51,14 +51,14 @@ def main():
 
     if task == "Final Demo":
         print("Task: " + task)
-        desired_mean = 10
-        desired_variance = 0.8
+        desired_mean = 10.2
+        desired_variance = 0.7
         #standard initaial conditions
         #initial_time_mill = 0
         #initial_time_stop = 120
-        initial_time_mill = 0
-        initial_time_stop = 0
-        cooking_loop(robot, SALT, desired_mean, desired_variance, initial_time_stop, initial_time_mill, "True", "True")
+        initial_time_mill = 1.5
+        initial_time_stop = 40
+        cooking_loop(robot, SALT, desired_mean, desired_variance, initial_time_stop, initial_time_mill, "False", "True")
 
     if task == "Average Salinity Detection":
         print("Task: " + task)
@@ -214,7 +214,7 @@ def cooking_loop(robot, SALT, desired_mean, desired_variance, initial_time_stop,
     # Heat used = 6
     mixing_sequence_time = 39.0
     # parameters:
-    total_cooking_time = 1100
+    total_cooking_time = 1150
     time_salt = initial_time_mill
     # time_stop = 21
     time_stop = initial_time_stop
@@ -505,10 +505,10 @@ def standard_mix_procedure(robot, no_times):
 #        for angle in [0, 20, 40, 60, 80, 100, 120, 140, 160]:
 #            fold_eggs(robot, 0.133, angle, 0.08)
         for k in range(zigzag_no):
-            zigzag_stir_mix(robot, 0.133, 0.12)
+            zigzag_stir_mix(robot, 0.132, 0.12)
         for j in range(stir_no):
             move_to_mixing_home(robot)
-            stir_circle_relative(robot, 0.105, 0.135, 0.001, 0.30, 1.5)
+            stir_circle_relative(robot, 0.102, 0.133, 0.001, 0.30, 1.5)
             move_to_mixing_home(robot)
 
 def cut_yolks(robot):
