@@ -43,8 +43,7 @@ task = "Final Demo"
 
 def main():
     print("------------Configuring Burt-------------\r\n")
-    robot = kgr.kg_robot(port=30010,db_host="169.254.250.80")
-    #robot = kgr.kg_robot(port=30010,ee_port="COM32",db_host="192.168.1.50")
+    robot = kgr.kg_robot(port=30010,db_host="169.254.114.206")
     print("----------------Hi Burt!-----------------\r\n\r\n")
 
     SALT = salt_sensor(70)
@@ -57,8 +56,8 @@ def main():
         #initial_time_mill = 0
         #initial_time_stop = 120
         initial_time_mill = 1.5
-        initial_time_stop = 40
-        cooking_loop(robot, SALT, desired_mean, desired_variance, initial_time_stop, initial_time_mill, "False", "True")
+        initial_time_stop = 10
+        cooking_loop(robot, SALT, desired_mean, desired_variance, initial_time_stop, initial_time_mill, "True", "True")
 
     if task == "Average Salinity Detection":
         print("Task: " + task)
@@ -483,10 +482,10 @@ def add_salt(robot, time_salt_mill):
     robot.translatel_rel([0, 0.005, 0.147, 0, 0, 0], vel=0.1)
     robot.movej_rel([0, 0, 0, 0, 1.57, 0])
     robot.movej_rel([0.05, -0.147, 0, 0, 0, 0])
-    robot.movej_rel([0, 0, -0.02, 0, 0, 0])
+    robot.movej_rel([0, 0, -0.04, 0, 0, 0])
     time.sleep(time_salt_mill)
 
-    robot.movej_rel([0, 0, 0.02, 0, 0, 0])
+    robot.movej_rel([0, 0, 0.04, 0, 0, 0])
     robot.movej_rel([-0.05, 0.147, 0, 0, 0, 0])
     robot.movej_rel([0, 0, 0, 0, -1.57, 0])
     robot.translatel_rel([0, -0.005, -0.1, 0, 0, 0], vel=0.1)
@@ -505,7 +504,7 @@ def standard_mix_procedure(robot, no_times):
 #        for angle in [0, 20, 40, 60, 80, 100, 120, 140, 160]:
 #            fold_eggs(robot, 0.133, angle, 0.08)
         for k in range(zigzag_no):
-            zigzag_stir_mix(robot, 0.132, 0.12)
+            zigzag_stir_mix(robot, 0.129, 0.12)
         for j in range(stir_no):
             move_to_mixing_home(robot)
             stir_circle_relative(robot, 0.102, 0.133, 0.001, 0.30, 1.5)
