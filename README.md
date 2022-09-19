@@ -1,5 +1,8 @@
 # Closed-Loop Robotic Cooking of Scrambled Eggs with ‘Taste’ Sensor <br />
 
+
+![](https://github.com/Grzegorr/ROSassignment/blob/master/home1.png)
+
 [(README_media/1_min_presentation.mp4)]
 
 
