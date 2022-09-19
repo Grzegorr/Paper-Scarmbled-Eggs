@@ -1,9 +1,6 @@
 # Closed-Loop Robotic Cooking of Scrambled Eggs with ‘Taste’ Sensor <br />
 
 
-![](https://github.com/Grzegorr/Paper-Scarmbled-Eggs/blob/main/README_media/1_min_presentation.mp4)
-
-[(README_media/1_min_presentation.mp4)]
 
 
 
