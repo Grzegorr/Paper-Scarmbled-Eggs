@@ -8,7 +8,7 @@ class SolenitySensor:
 
     def __init__(self, no_read):
         self.no_readings = no_read
-        self.ser = serial.Serial(port='COM5', baudrate=19200, bytesize=serial.EIGHTBITS, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, timeout=10)
+        self.ser = serial.Serial(port='COM3', baudrate=19200, bytesize=serial.EIGHTBITS, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, timeout=10)
         print("I am connected.")
         self.current_measurements = np.full(self.no_readings, np.inf)
 

@@ -56,8 +56,8 @@ def main():
         #initial_time_mill = 0
         #initial_time_stop = 120
         initial_time_mill = 1.5
-        initial_time_stop = 10
-        cooking_loop(robot, SALT, desired_mean, desired_variance, initial_time_stop, initial_time_mill, "True", "True")
+        initial_time_stop = 5
+        cooking_loop(robot, SALT, desired_mean, desired_variance, initial_time_stop, initial_time_mill, if_cook ="True", if_test="True")
 
     if task == "Average Salinity Detection":
         print("Task: " + task)
@@ -77,6 +77,7 @@ def main():
         ###################standard_mix_procedure(robot, 10)
         mixing_loop(robot, SALT,target_var)
         exit()
+
         #add salt
         add_salt(robot, 0)
         #move to hot hob
@@ -223,7 +224,7 @@ def cooking_loop(robot, SALT, desired_mean, desired_variance, initial_time_stop,
         # start at lower left hob
         move_to_scrambling_home(robot)  # yes, the names are switched
         #time.sleep(20)
-        cut_yolks(robot)
+        #cut_yolks(robot)
         move_hot_to_cold(robot)  # yes its another way around
         add_salt(robot, time_salt)
 
@@ -419,8 +420,10 @@ def zigzag_stir_mix(robot, h, r):
     #start from cooking home
     robot.movel(wp.mixing_home_l)
 
-    robot.movel_tool([0.5*r, 0.5*r, 0, 0, 0, 0])
-    robot.movel_tool([0, 0, h, 0, 0, 0])
+    robot.movel_tool([0.25*r, 0.25*r, 0, 0, 0, 0])
+    robot.movel_tool([0, 0, h*0.9, 0, 0, 0])
+    robot.movel_tool([0.25*r, 0.25*r, 0, 0, 0, 0])
+    robot.movel_tool([0, 0, h*0.1, 0, 0, 0])
 
     robot.movel_tool([-r, 0, 0, 0, 0, 0])
     robot.movel_tool([r, -0.25 * r, 0, 0, 0, 0])
@@ -504,10 +507,10 @@ def standard_mix_procedure(robot, no_times):
 #        for angle in [0, 20, 40, 60, 80, 100, 120, 140, 160]:
 #            fold_eggs(robot, 0.133, angle, 0.08)
         for k in range(zigzag_no):
-            zigzag_stir_mix(robot, 0.129, 0.12)
+            zigzag_stir_mix(robot, h=0.13, r=0.122)
         for j in range(stir_no):
             move_to_mixing_home(robot)
-            stir_circle_relative(robot, 0.102, 0.133, 0.001, 0.30, 1.5)
+            stir_circle_relative(robot, radius=0.09, height=0.128,  move_radius=0.001, move_vel=0.30, move_acc=1.5)
             move_to_mixing_home(robot)
 
 def cut_yolks(robot):
@@ -604,7 +607,7 @@ def mass_salinity_test(robot, SALT):
     # h5 - up to brush
     h1 = 0.32
     h2 = 0.0945
-    h3 = 0.025
+    h3 = 0.015
     h4 = 0.062
     h5 = 0.22
 
@@ -672,21 +675,21 @@ def stir_circle_relative(robot, radius, height, move_radius, move_vel, move_acc)
     for angle_number in range(18):
         if angle_number == 0:
             print("Move: Starting Point on Circle")
-
+            robot.translatel_rel([0, 0, -height * 0.9, 0, 0, 0])
             #angle to radians
-            angle = (2*3.14) * (angle_number/18)
+            angle = (2*3.14) * (angle_number/16)
 
             #convoluted way to move to first point - could be improved greatly
             x = radius * numpy.cos(angle)
             y = radius * numpy.sin(angle)
-            new_pose = [sum(x) for x in zip(stirring_home, [x,y,0,0,0,0])]#its element wise addition
+            new_pose = [sum(x) for x in zip(stirring_home, [x,y,-height * 0.9,0,0,0])]#its element wise addition
             robot.movel(new_pose)
 
             #Move toward inner part of circle
             #robot.movel_tool([0, 0, 0, 0, 0, 2 * 3.14 / 36])
 
             #tool down
-            robot.translatel_rel([0, 0, -height, 0, 0, 0])
+            robot.translatel_rel([0, 0, -height*0.1, 0, 0, 0])
         else:
             #previous_angle = (2 * 3.14) * ((angle_number-1) / 18)
             #previous_x = radius * numpy.cos(previous_angle)
@@ -702,7 +705,7 @@ def stir_circle_relative(robot, radius, height, move_radius, move_vel, move_acc)
             #y_diff = y - previous_y
             #print("x_diff: " + str(x_diff))
             #print("y_diff: " + str(y_diff))
-            robot.movel_tool([0, 0.3*radius, 0, 0, 0, 2 * 3.14 / 18], vel = move_vel, acc = move_acc, radius = move_radius)
+            robot.movel_tool([0, 0.31*radius, 0, 0.0007, 0, 2 * 3.14 / 16], vel = move_vel, acc = move_acc, radius = move_radius)
             #print(previous_angle - angle)
             #print()
 
